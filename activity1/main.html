@@ -3,8 +3,10 @@
 <head>
 	<title>Activity1</title>
 </head>
-<body>
-	Current Calculator Value: <h3 id="val"></h3>
+
+<body onload="load()">
+	<div> Current Calculator Value: <h3 id="val"></h3>
+	</div>
 	<br>
 	<div id="response">
 		<p>
@@ -12,10 +14,10 @@
 			<br><br>
 			<input type='button' id="btn_add" value='add' onclick="postAdd()" />
 			<input type='button' id="btn_sub" value='subtract' onclick="postSub()" />
-			<input type='button' id="btn_pop" value='pop' />
+			<input type='button' id="btn_pop" value='pop' onclick="postPop()" />
 		</p>
 	</div>
-	<a href='/reset'><input type='button' value='reset' /></a>
+	<input type='button' id="btn_reset" value='reset' onclick="reset()"/></a>
 	<br><br>
 
 	<div id="past">
@@ -25,17 +27,60 @@
 	</div>
 </body>
 <script>
-		function load() {
+	function load() {
+		let val = document.getElementById('input');
+		let req = new XMLHttpRequest();
+		req.open('GET', 'http://localhost:8088/history', true);
+		req.onreadystatechange = function () {
+			if (req.readyState === 4) {
+				if (req.status === 200) {
+					var resp = JSON.parse(req.responseText);
+					
+					var past = document.getElementById("past");
+					past.innerHTML = printStack(resp);
+				}
+			}
+		};
+		req.setRequestHeader("Content-type", "application/json");
+		req.send('{ \"value\" : \"' + 0 + '\"}');
+		loadValue();
+	}
+</script>
+
+<script>
+	function loadValue() {
+		let val = document.getElementById('input');
+		let req = new XMLHttpRequest();
+		req.open('GET', 'http://localhost:8088/value', true);
+		req.onreadystatechange = function () {
+			if (req.readyState === 4) {
+				if (req.status === 200) {
+					var resp = JSON.parse(req.responseText);
+					document.getElementById("val").innerHTML = parseInt(resp.value);
+					console.log(resp);
+				}
+			}
+		};
+		req.setRequestHeader("Content-type", "application/json");
+		req.send('{ \"value\" : \"' + 0 + '\"}');
+	}
+</script>
+
+<script>
+	function postAdd() {
 		let val = document.getElementById('input');
 		var add = val.value;
 		let req = new XMLHttpRequest();
-		req.open('GET', 'http://localhost:8088/', true);
+		req.open('POST', 'http://localhost:8088/add', true);
 		req.onreadystatechange = function () {
 			if (req.readyState === 4) {
 				if (req.status === 200) {
 					var resp = JSON.parse(req.responseText);
 					document.getElementById("val").innerHTML = parseInt(resp.currVal);
-					console.log(resp);			
+					console.log(resp);
+
+					var past = document.getElementById("past");
+					past.innerHTML = printStack(resp);
 				}
 			}
 		};
@@ -43,34 +88,10 @@
 		val.innerHTML = add;
 		req.send('{ \"value\" : \"' + add + '\"}');
 	}
-	</script>
-
-<script>
-	function postAdd() {
-	let val = document.getElementById('input');
-	var add = val.value;
-	let req = new XMLHttpRequest();
-	req.open('POST', 'http://localhost:8088/add', true);
-	req.onreadystatechange = function () {
-		if (req.readyState === 4) {
-			if (req.status === 200) {
-				var resp = JSON.parse(req.responseText);
-				document.getElementById("val").innerHTML = parseInt(resp.currVal);
-				console.log(resp);			
-
-				var past = document.getElementById("past");
-				past.innerHTML = printStack(resp);
-			}
-		}
-	};
-	req.setRequestHeader("Content-type", "application/json");
-	val.innerHTML = add;
-	req.send('{ \"value\" : \"' + add + '\"}');
-}
 </script>
 
 <script>
-		function postSub() {
+	function postSub() {
 		let val = document.getElementById('input');
 		var sub = val.value;
 		let req = new XMLHttpRequest();
@@ -80,10 +101,10 @@
 				if (req.status === 200) {
 					var resp = JSON.parse(req.responseText);
 					document.getElementById("val").innerHTML = parseInt(resp.currVal);
-					console.log(resp);	
-					
+					console.log(resp);
+
 					var past = document.getElementById("past");
-				past.innerHTML = printStack(resp);
+					past.innerHTML = printStack(resp);
 				}
 			}
 		};
@@ -91,16 +112,59 @@
 		val.innerHTML = sub;
 		req.send('{ \"value\" : \"' + sub + '\"}');
 	}
-	</script>
+</script>
 
-	<script>
-		function printStack(response) {
-			var str = '';
-			for (var i = 0; i < response.calcStack.length; i++){
-				str += response.calcStack[i].operation + ", " + response.calcStack[i].operand + ", " +
-						response.calcStack[i].ip + " " + response.calcStack[i].user + "<br>";
+<script>
+	function postPop() {
+		let req = new XMLHttpRequest();
+		req.open('POST', 'http://localhost:8088/pop', true);
+		req.onreadystatechange = function () {
+			if (req.readyState === 4) {
+				if (req.status === 200) {
+					var resp = JSON.parse(req.responseText);
+					document.getElementById("val").innerHTML = parseInt(resp.currVal);
+					console.log(resp);
+
+					var past = document.getElementById("past");
+					past.innerHTML = printStack(resp);
+				}
 			}
-			return str;
+		};
+		req.setRequestHeader("Content-type", "application/json");
+		req.send('{ \"value\" : \"' + 0 + '\"}');
+	}
+</script>
+
+<script>
+	function reset() {
+		let req = new XMLHttpRequest();
+		req.open('GET', 'http://localhost:8088/reset', true);
+		req.onreadystatechange = function () {
+			if (req.readyState === 4) {
+				if (req.status === 200) {
+					var resp = JSON.parse(req.responseText);
+					document.getElementById("val").innerHTML = parseInt(resp.currVal);
+					console.log(resp);
+
+					var past = document.getElementById("past");
+					past.innerHTML = printStack(resp);
+				}
+			}
+		};
+		req.setRequestHeader("Content-type", "application/json");
+		req.send('{ \"value\" : \"' + 0 + '\"}');
+	}
+</script>
+
+<script>
+	function printStack(response) {
+		var str = '';
+		for (var i = 0; i < response.calcStack.length; i++) {
+			str += response.calcStack[i].operation + ", " + response.calcStack[i].operand + ", " +
+			response.calcStack[i].ip + " " + response.calcStack[i].user + "<br>";
 		}
-	</script>
+		return str;
+	}
+</script>
+
 </html>

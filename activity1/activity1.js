@@ -36,6 +36,13 @@ app.get('/', function (req, res) {
 
 app.post('/add', function (req, res) {
 	console.log(req.body);
+	var num = parseInt(req.body.value);
+	console.log(num);
+	if(isNaN(num)) {
+		error500(req, res);
+		return;
+	}
+
 	app.locals.calcValue += parseInt(req.body.value);
 	console.log("add val: " + app.locals.calcValue);
 	app.locals.opStack = calcOperation({operation:'+', operand:parseInt(req.body.value), ip:req.ip, user:req.headers['user-agent']});
@@ -43,12 +50,50 @@ app.post('/add', function (req, res) {
 	res.end();
 });
 
+app.post('/pop', function (req, res) {
+	if (calc.getStack().length > 0) {
+		calc.pop();
+		app.locals.calcValue = calc.getCurrVal();
+		app.locals.opStack = calc.getStack();
+	}
+	res.send(calc);
+	res.end();
+});
+
+app.get('/pop', function (req, res) {
+	if (calc.getStack().length > 0) {
+		calc.pop();
+		app.locals.calcValue = calc.getCurrVal();
+		app.locals.opStack = calc.getStack();
+	}
+	res.send(calc);
+	res.end();
+});
+
+app.get('/reset', function (req, res) {
+	app.locals.calcValue = 0;
+	app.locals.opStack = [];
+	calc.reset();
+	res.status(200);
+	res.send(calc);
+	res.end();
+});
+
 app.post('/sub', function (req, res) {
-	console.log(req.body);
 	app.locals.calcValue -= parseInt(req.body.value);
-	console.log("Local calc: " + app.locals.calcValue);
 	app.locals.opStack = calcOperation({operation:'-', operand:parseInt(req.body.value), ip:req.ip, user:req.headers['user-agent']});
 	res.send(calc);
+	res.end();
+});
+
+app.get('/history', function(req, res) {
+	res.send(calc);
+	res.end();
+});
+
+app.get('/value', function(req, res) {
+	var obj = {"value" : calc.currVal}
+	res.send(obj);
 	res.end();
 });
 
@@ -60,15 +105,59 @@ function getRequestObject() {
 	}
 }
 
+app.get('/subtract', function(req, res) {
+	error405(req, res);
+});
+
+app.get('/add', function(req, res) {
+	error405(req, res);
+});
+
+app.post('/reset', function(req, res) {
+	error405(req, res);
+});
+
+app.post('/history', function(req, res) {
+	error405(req, res);
+});
+
+app.post('/value', function(req, res) {
+	error405(req, res);
+});
+
+app.all('/*', function(req, res) {
+	error404(req, res);
+});
+
+function error405(req, res) {
+		var obj = {"Status Code" : 405, "Message" : "Method Not Allowed"};
+		res.set({'Cache-Control': 'no-cache, no-store'});
+		res.status(405);
+		res.type('html');
+		res.send(obj);
+}
+
+function error500(req, res) {
+		var obj = {"Status Code" : 500, "Message" : "Internal Server Error"};
+		res.set({'Cache-Control': 'no-cache, no-store'});
+		res.status(500);
+		res.type('html');
+		res.send(obj);
+}
+
+function error404(req, res) {
+		var obj = {"Status Code" : 404, "Message" : "Not Found"};
+		res.set({'Cache-Control': 'no-cache, no-store'});
+		res.status(404);
+		res.type('html');
+		res.send(obj);
+}
 /*
  * Handle add, subtract, and reset calls
  *
  * isNaN() referenced from:
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isNaN
  */
-
-
-
 
 function calcOperation(dict) {
 	calc.calc(dict);
