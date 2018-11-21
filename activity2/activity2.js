@@ -10,9 +10,9 @@ app.use(bParse.json());
 
 app.listen(8088);
 
-app.get('/', function (req,res){
+app.get('/', function (req, res) {
 	res.set({ 'Cache-Control': 'no-cache, no-store' });
 	res.status(200);
 	res.type('html');
-	res.sendFile(path.join(__dirname + '/main.html')); 
+	res.sendFile(path.join(__dirname + '/main.html'));
 });

@@ -33,12 +33,13 @@
         <option value="London">London</option>
         <option value="Portland">Portland</option>
       </select>
+      <div id="status"></div>
       <br />
       <input type='button' id="refresh" value='refresh' onclick="reload()" />
     </form>
   </div>
   <div id="nextday"></div>
- 
+
 </body>
 <script>
   function selectionChanged() {
@@ -57,9 +58,15 @@
     var apiKey = 'e6e5c090cdd34f40b72233758181811';
     var site = 'http://api.apixu.com/v1/current.json?';
     fetch(`${site}key=${apiKey}&q=${city}`)
-      .then((resp) => resp.json())
+      .then((resp) => {
+        if (!resp.ok) { throw resp }
+        console.log(resp.statusText);
+        statusCode(resp.status);
+        return resp.json()
+      })
       .then(function (data) {
         console.log(data);
+        console.log(data.status);
         if (data.current.temp_c < 20) {
           addRow(data);
           addButton();
@@ -67,13 +74,21 @@
         var hottest = getHottestCity();
         var average = getAverageTemp();
         updateAveAndMax(average.toFixed(1), hottest);
-        
+
+      }).catch(function (error) {
+        console.log(error.status);
       });
 
 
   }
 </script>
 
+<script>
+  function statusCode(val) {
+    var stat = document.getElementById("status");
+    stat.innerHTML = `Status code ${val}`;
+  }
+</script>
 <script>
   function addCell(row, col, value) {
     var cell = row.insertCell(col);
@@ -103,15 +118,15 @@
     var t = document.createTextNode("forecast");
     var rows = document.getElementById("dataTable").rows.length;
     //rows = parseInt(rows);
-    
-    
+
+
     var i = rows - 1;
     var newbtn = `<input type='button' id=\"forecast${i}\" value=\'forecast\' data-val=\"${i}\"onclick=\"forecast(this.id)\" />`;
-      var f = document.getElementById("dataTable").rows[i].cells[0];
-      f.innerHTML += " " + newbtn;
-      //btn.appendChild(t);
-      //f.appendChild(btn);
-    
+    var f = document.getElementById("dataTable").rows[i].cells[0];
+    f.innerHTML += " " + newbtn;
+    //btn.appendChild(t);
+    //f.appendChild(btn);
+
 
 
   }
@@ -122,7 +137,7 @@
     var rows = document.getElementById("dataTable").rows;
     var count = rows.length;
     console.log("From reload: " + rows);
-    
+
     //array to store city names
     var cityArray = [];
 
@@ -133,7 +148,7 @@
       cityArray.push(city);
     }
     //delete rows
-    while (count > 1){
+    while (count > 1) {
       document.getElementById("dataTable").deleteRow(1);
       count--;
     }
@@ -195,34 +210,39 @@
 </script>
 
 <script>
-function forecast(id){
-  console.log(id);
-  var x = id;
-  var item = document.getElementById(x).getAttribute("data-val"); //get the value
-  console.log(item);
+  function forecast(id) {
+    console.log(id);
+    var x = id;
+    var item = document.getElementById(x).getAttribute("data-val"); //get the value
+    console.log(item);
 
-  var city = document.getElementById("dataTable").rows[item].cells[0];
-  var newCity;
-  console.log(city);
-  newCity = String(city.innerText);
-  newCity.trim();
-  console.log(newCity);
-  
-  console.log("Length" + length);
+    var city = document.getElementById("dataTable").rows[item].cells[0];
+    var newCity;
+    console.log(city);
+    newCity = String(city.innerText);
+    newCity.trim();
+    console.log(newCity);
+
+    console.log("Length" + length);
     var apiKey = 'e6e5c090cdd34f40b72233758181811';
     var site = 'http://api.apixu.com/v1/forecast.json?';
     fetch(`${site}key=${apiKey}&q=${newCity}`)
-      .then((resp) => resp.json())
+      .then((resp) => {
+        if (!resp.ok) { throw resp }
+        console.log(resp.statusText);
+        statusCode(resp.status);
+        return resp.json()
+      })
       .then(function (data) {
         console.log(data);
         addForecast(data);
-        });
-}
+      });
+  }
 
-function addForecast(data) {
-  var forecast = document.getElementById("nextday");
-  forecast.innerHTML = 
-    ` Forecast for ${data.location.name} on ${data.forecast.forecastday[0].date}.
+  function addForecast(data) {
+    var forecast = document.getElementById("nextday");
+    forecast.innerHTML =
+      ` Forecast for ${data.location.name} on ${data.forecast.forecastday[0].date}.
       The Epoch Time is ${data.forecast.forecastday[0].date_epoch} <br>
       <br>
       Moonrise is at: ${data.forecast.forecastday[0].astro.moonrise} <br>
@@ -247,7 +267,7 @@ function addForecast(data) {
       The Total Precipitation in mm is: ${data.forecast.forecastday[0].day.totalprecip_mm} <br>
       The UV index is: ${data.forecast.forecastday[0].day.uv} <br>
       `;
-}
+  }
 
 </script>
 
