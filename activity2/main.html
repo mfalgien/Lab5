@@ -42,6 +42,7 @@
 
 </body>
 <script>
+  //get selected city
   function selectionChanged() {
     var x = document.getElementById("selector").value;
     console.log(x);
@@ -53,10 +54,11 @@
 
 <script>
   function getWeather(city) {
-
     console.log("Length" + length);
     var apiKey = 'e6e5c090cdd34f40b72233758181811';
     var site = 'http://api.apixu.com/v1/current.json?';
+    
+    //fetch call
     fetch(`${site}key=${apiKey}&q=${city}`)
       .then((resp) => {
         if (!resp.ok) { throw resp }
@@ -65,17 +67,11 @@
         return resp.json()
       })
       .then(function (data) {
-        console.log(data);
-        console.log(data.status);
-       // if (data.current.temp_c < 20) {
-          addRow(data);
-          addButton();
-          //addConditions(data);
-       // }
+        addRow(data);
+        addButton();
         var hottest = getHottestCity();
         var average = getAverageTemp();
         updateAveAndMax(average.toFixed(1), hottest);
-
       }).catch(function (error) {
         console.log(error.status);
         statusCode(error.status);
@@ -86,12 +82,14 @@
 </script>
 
 <script>
+  //update dom of status code
   function statusCode(val) {
     var stat = document.getElementById("status");
     stat.innerHTML = `Status code ${val}`;
   }
 </script>
 <script>
+  //add cell to table
   function addCell(row, col, value) {
     var cell = row.insertCell(col);
     var value = document.createTextNode(value);
@@ -101,6 +99,7 @@
 
 
 <script>
+  //add a new row to the table
   function addRow(city) {
     var row = document.getElementById("dataTable").getElementsByTagName('tbody')[0]
     var value = row.insertRow(row.rows.length);
@@ -120,22 +119,18 @@
   } */
 </script>
 <script>
-  function addButton() {
 
+  //add a forecast button to cities
+  function addButton() {
     var btn = document.createElement("button");
     var t = document.createTextNode("forecast");
     var rows = document.getElementById("dataTable").rows.length;
     //rows = parseInt(rows);
 
-
     var i = rows - 1;
     var newbtn = `<input type='button' id=\"forecast${i}\" value=\'forecast\' data-val=\"${i}\"onclick=\"forecast(this.id)\" />`;
     var f = document.getElementById("dataTable").rows[i].cells[0];
     f.innerHTML += " " + newbtn;
-    //btn.appendChild(t);
-    //f.appendChild(btn);
-
-
 
   }
 </script>
@@ -173,31 +168,25 @@
 </script>
 
 <script>
+  //return the hottest city of all in table
   function getHottestCity() {
     var rows = document.getElementById("dataTable").rows;
     var most = [];
     for (var i = 1; i < rows.length; i++) {
       var val = parseFloat(rows[i].cells[2].innerHTML);
       most.push(val);
-      console.log("value of most" + most);
 
     }
     var max = Math.max.apply(Math, most);
-    console.log(max);
-
-    var maxIndex = most.indexOf(Math.max.apply(Math, most));
+    var maxIndex = most.indexOf(Math.max.apply(Math, most)); //get index for city
     var city = rows[maxIndex + 1].cells[0].innerText;
     var newCity = String(city);
-    //newCity.replace("<input type='button' id=\"forecast\" value=\'forecast\' onclick=\"forecast()\" />", "");
-    //newCity.replace("<.*?>", "" ); //regex to remove button
-    console.log("City: " + city);
-    console.log("New City: " + newCity);
-    console.log(maxIndex);
     return newCity;
   }
 </script>
 
 <script>
+  //return the average temperature of all cities
   function getAverageTemp() {
     var rows = document.getElementById("dataTable").rows;
     var average = 0;
@@ -211,6 +200,7 @@
 </script>
 
 <script>
+  //update the dom
   function updateAveAndMax(average, maximum) {
     var dom = document.getElementById("hottest");
     dom.innerHTML = `The average temperature is ${average}&#8451; and the hottest city is ${maximum}.`;
@@ -219,36 +209,34 @@
 
 <script>
   function forecast(id) {
-      console.log(id);
-      var x = id;
-      var item = document.getElementById(x).getAttribute("data-val"); //get the value
-      console.log(item);
+    console.log(id);
+    var x = id;
+    var item = document.getElementById(x).getAttribute("data-val"); //get the value
+    console.log(item);
 
-      var city = document.getElementById("dataTable").rows[item].cells[0];
-      var newCity;
-      console.log(city);
-      newCity = String(city.innerText);
-      newCity.trim();
-      console.log(newCity);
+    var city = document.getElementById("dataTable").rows[item].cells[0];
+    var newCity = String(city.innerText);  //get innerText not innerHTML with button
+    newCity.trim();
 
-      console.log("Length" + length);
-      var apiKey = 'e6e5c090cdd34f40b72233758181811';
-      var site = 'http://api.apixu.com/v1/forecast.json?';
-      fetch(`${site}key=${apiKey}&q=${newCity}`)
-        .then((resp) => {
-          if (!resp.ok) { throw resp }
-          console.log(resp.statusText);
-          statusCode(resp.status);
-          return resp.json()
-        })
-        .then(function (data) {
-          console.log(data);
-          addForecast(data);
-        }).catch(function (error) {
-          console.log(error.status);
-          statusCode(error.status);
-        });
-    }
+    //fetch call for forecast 
+    console.log("Length" + length);
+    var apiKey = 'e6e5c090cdd34f40b72233758181811';
+    var site = 'http://api.apixu.com/v1/forecast.json?';
+    fetch(`${site}key=${apiKey}&q=${newCity}`)
+      .then((resp) => {
+        if (!resp.ok) { throw resp }
+        console.log(resp.statusText);
+        statusCode(resp.status);
+        return resp.json()
+      })
+      .then(function (data) {
+        console.log(data);
+        addForecast(data);
+      }).catch(function (error) {
+        console.log(error.status);
+        statusCode(error.status);
+      });
+  }
   function addForecast(data) {
     var forecast = document.getElementById("nextday");
     forecast.innerHTML =
