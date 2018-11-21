@@ -1,13 +1,3 @@
-/* SER 421 Lab 3
- *
- * Reference Attributes: Kevin Gary, Brad Dayley
- *
- * EJS Views referenced from:
- * https://github.com/kgary/ser421public/blob/master/NodeExpress/templates/express_templates.js
- *
- * Body-parser referenced from:
- * https://github.com/kgary/ser421public/blob/master/NodeExpress/express_post.js
- */
 var express = require('express');
 var bParse = require('body-parser');
 var calc = require('./calc.js');
@@ -32,6 +22,14 @@ app.get('/', function (req, res) {
 	res.sendFile(path.join(__dirname + '/main.html')); 
 	
 	
+});
+
+app.get('/api', function (req, res) {
+	res.set({ 'Cache-Control': 'no-cache, no-store' });
+	res.status(200);
+	res.type('html');
+	//res.send(calc);
+	res.sendFile(path.join(__dirname + '/api.html')); 
 });
 
 app.post('/add', function (req, res) {
@@ -152,12 +150,6 @@ function error404(req, res) {
 		res.type('html');
 		res.send(obj);
 }
-/*
- * Handle add, subtract, and reset calls
- *
- * isNaN() referenced from:
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isNaN
- */
 
 function calcOperation(dict) {
 	calc.calc(dict);

@@ -77,6 +77,7 @@
 
       }).catch(function (error) {
         console.log(error.status);
+        statusCode(error.status);
       });
 
 
@@ -104,7 +105,7 @@
     var value = row.insertRow(row.rows.length);
     addCell(value, 0, city.location.name);
     addCell(value, 1, city.location.localtime);
-    addCell(value, 2, city.current.temp_c);
+    addCell(value, 2, `${city.current.temp_c} feels like ${city.current.feelslike_c}`);
     addCell(value, 3, city.current.wind_kph);
     addCell(value, 4, city.current.vis_km);
 
@@ -211,34 +212,36 @@
 
 <script>
   function forecast(id) {
-    console.log(id);
-    var x = id;
-    var item = document.getElementById(x).getAttribute("data-val"); //get the value
-    console.log(item);
+      console.log(id);
+      var x = id;
+      var item = document.getElementById(x).getAttribute("data-val"); //get the value
+      console.log(item);
 
-    var city = document.getElementById("dataTable").rows[item].cells[0];
-    var newCity;
-    console.log(city);
-    newCity = String(city.innerText);
-    newCity.trim();
-    console.log(newCity);
+      var city = document.getElementById("dataTable").rows[item].cells[0];
+      var newCity;
+      console.log(city);
+      newCity = String(city.innerText);
+      newCity.trim();
+      console.log(newCity);
 
-    console.log("Length" + length);
-    var apiKey = 'e6e5c090cdd34f40b72233758181811';
-    var site = 'http://api.apixu.com/v1/forecast.json?';
-    fetch(`${site}key=${apiKey}&q=${newCity}`)
-      .then((resp) => {
-        if (!resp.ok) { throw resp }
-        console.log(resp.statusText);
-        statusCode(resp.status);
-        return resp.json()
-      })
-      .then(function (data) {
-        console.log(data);
-        addForecast(data);
-      });
-  }
-
+      console.log("Length" + length);
+      var apiKey = 'e6e5c090cdd34f40b72233758181811';
+      var site = 'http://api.apixu.com/v1/forecast.json?';
+      fetch(`${site}key=${apiKey}&q=${newCity}`)
+        .then((resp) => {
+          if (!resp.ok) { throw resp }
+          console.log(resp.statusText);
+          statusCode(resp.status);
+          return resp.json()
+        })
+        .then(function (data) {
+          console.log(data);
+          addForecast(data);
+        }).catch(function (error) {
+          console.log(error.status);
+          statusCode(error.status);
+        });
+    }
   function addForecast(data) {
     var forecast = document.getElementById("nextday");
     forecast.innerHTML =
