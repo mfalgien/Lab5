@@ -8,7 +8,7 @@
   <div id="hottest">
     <br>
   </div>
-  <table id="dataTable" border="1" cellspacing="0" cellpadding="5">
+  <table id="dataTable" cellspacing="0" cellpadding="5">
     <thead>
       <tr>
         <th>City Name</th>
@@ -67,10 +67,11 @@
       .then(function (data) {
         console.log(data);
         console.log(data.status);
-        if (data.current.temp_c < 20) {
+       // if (data.current.temp_c < 20) {
           addRow(data);
           addButton();
-        }
+          //addConditions(data);
+       // }
         var hottest = getHottestCity();
         var average = getAverageTemp();
         updateAveAndMax(average.toFixed(1), hottest);
@@ -111,6 +112,12 @@
 
 
   }
+/*
+  function addConditions(city) {
+    var row = document.getElementById("dataTable").getElementsByTagName('tbody')[0]
+    var value = row.insertRow(row.rows.length);
+    addCell(value, 0, city.location.condition.text);
+  } */
 </script>
 <script>
   function addButton() {
