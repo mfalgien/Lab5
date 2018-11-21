@@ -1,0 +1,275 @@
+<html>
+
+<head>
+  <title>SER 421 - Lab 5</title>
+</head>
+
+<body onload="getWeather('Oakland')">
+  <div id="hottest">
+    <br>
+  </div>
+  <table id="dataTable" cellspacing="0" cellpadding="5">
+    <thead>
+      <tr>
+        <th>City Name</th>
+        <th>Timestamp (yyyy:mm:dd:hh:mm)</th>
+        <th>Temperature in &deg;C</th>
+        <th>Wind Speed in KPH</th>
+        <th>Visibility in KM</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div id="sectionTable"></div>
+  <div id="sectionForm">
+    <br />
+    <form action="#">
+      <label>Please select another city: </label>
+      <select onchange="return selectionChanged()" id="selector">
+        <option value="0"> Select Here</option>
+        <option value="Los Angeles"> Los Angeles</option>
+        <option value="Dubai">Dubai</option>
+        <option value="Houston">Houston</option>
+        <option value="London">London</option>
+        <option value="Portland">Portland</option>
+      </select>
+      <div id="status"></div>
+      <br />
+      <input type='button' id="refresh" value='refresh' onclick="reload()" />
+    </form>
+  </div>
+  <div id="nextday"></div>
+
+</body>
+<script>
+  //get selected city
+  function selectionChanged() {
+    var x = document.getElementById("selector").value;
+    console.log(x);
+    if (x !== "0") {
+      getWeather(x);
+    }
+  }
+</script>
+
+<script>
+  function getWeather(city) {
+    console.log("Length" + length);
+    var apiKey = 'e6e5c090cdd34f40b72233758181811';
+    var site = 'http://api.apixu.com/v1/current.json?';
+    
+    //fetch call
+    fetch(`${site}key=${apiKey}&q=${city}`)
+      .then((resp) => {
+        if (!resp.ok) { throw resp }
+        console.log(resp.statusText);
+        statusCode(resp.status);
+        return resp.json()
+      })
+      .then(function (data) {
+        addRow(data);
+        addButton();
+        var hottest = getHottestCity();
+        var average = getAverageTemp();
+        updateAveAndMax(average.toFixed(1), hottest);
+      }).catch(function (error) {
+        console.log(error.status);
+        statusCode(error.status);
+      });
+
+
+  }
+</script>
+
+<script>
+  //update dom of status code
+  function statusCode(val) {
+    var stat = document.getElementById("status");
+    stat.innerHTML = `Status code ${val}`;
+  }
+</script>
+<script>
+  //add cell to table
+  function addCell(row, col, value) {
+    var cell = row.insertCell(col);
+    var value = document.createTextNode(value);
+    cell.appendChild(value);
+  }
+</script>
+
+
+<script>
+  //add a new row to the table
+  function addRow(city) {
+    var row = document.getElementById("dataTable").getElementsByTagName('tbody')[0]
+    var value = row.insertRow(row.rows.length);
+    addCell(value, 0, city.location.name);
+    addCell(value, 1, city.location.localtime);
+    addCell(value, 2, `${city.current.temp_c} feels like ${city.current.feelslike_c}`);
+    addCell(value, 3, city.current.wind_kph);
+    addCell(value, 4, city.current.vis_km);
+
+
+  }
+/*
+  function addConditions(city) {
+    var row = document.getElementById("dataTable").getElementsByTagName('tbody')[0]
+    var value = row.insertRow(row.rows.length);
+    addCell(value, 0, city.location.condition.text);
+  } */
+</script>
+<script>
+
+  //add a forecast button to cities
+  function addButton() {
+    var btn = document.createElement("button");
+    var t = document.createTextNode("forecast");
+    var rows = document.getElementById("dataTable").rows.length;
+    //rows = parseInt(rows);
+
+    var i = rows - 1;
+    var newbtn = `<input type='button' id=\"forecast${i}\" value=\'forecast\' data-val=\"${i}\"onclick=\"forecast(this.id)\" />`;
+    var f = document.getElementById("dataTable").rows[i].cells[0];
+    f.innerHTML += " " + newbtn;
+
+  }
+</script>
+<script>
+  function reload() {
+    //var del = document.getElementById("dataTable");
+    var rows = document.getElementById("dataTable").rows;
+    var count = rows.length;
+    console.log("From reload: " + rows);
+
+    //array to store city names
+    var cityArray = [];
+
+    //get city names
+    for (var i = 1; i < rows.length; i++) {
+      var city = rows[i].cells[0].innerText;
+      city.trim();
+      cityArray.push(city);
+    }
+    //delete rows
+    while (count > 1) {
+      document.getElementById("dataTable").deleteRow(1);
+      count--;
+    }
+
+    //fetch new values for city in array
+    for (var i = 0; i < cityArray.length; i++) {
+      getWeather(cityArray[i]);
+    }
+
+    console.log(cityArray);
+    //clear out forecast
+    document.getElementById("nextday").innerHTML = "";
+  }
+</script>
+
+<script>
+  //return the hottest city of all in table
+  function getHottestCity() {
+    var rows = document.getElementById("dataTable").rows;
+    var most = [];
+    for (var i = 1; i < rows.length; i++) {
+      var val = parseFloat(rows[i].cells[2].innerHTML);
+      most.push(val);
+
+    }
+    var max = Math.max.apply(Math, most);
+    var maxIndex = most.indexOf(Math.max.apply(Math, most)); //get index for city
+    var city = rows[maxIndex + 1].cells[0].innerText;
+    var newCity = String(city);
+    return newCity;
+  }
+</script>
+
+<script>
+  //return the average temperature of all cities
+  function getAverageTemp() {
+    var rows = document.getElementById("dataTable").rows;
+    var average = 0;
+    for (var i = 1; i < rows.length; i++) {
+      var val = parseFloat(rows[i].cells[2].innerHTML);
+      average += val;
+    }
+    average /= (rows.length - 1);
+    return average;
+  }
+</script>
+
+<script>
+  //update the dom
+  function updateAveAndMax(average, maximum) {
+    var dom = document.getElementById("hottest");
+    dom.innerHTML = `The average temperature is ${average}&#8451; and the hottest city is ${maximum}.`;
+  }
+</script>
+
+<script>
+  function forecast(id) {
+    console.log(id);
+    var x = id;
+    var item = document.getElementById(x).getAttribute("data-val"); //get the value
+    console.log(item);
+
+    var city = document.getElementById("dataTable").rows[item].cells[0];
+    var newCity = String(city.innerText);  //get innerText not innerHTML with button
+    newCity.trim();
+
+    //fetch call for forecast 
+    console.log("Length" + length);
+    var apiKey = 'e6e5c090cdd34f40b72233758181811';
+    var site = 'http://api.apixu.com/v1/forecast.json?';
+    fetch(`${site}key=${apiKey}&q=${newCity}`)
+      .then((resp) => {
+        if (!resp.ok) { throw resp }
+        console.log(resp.statusText);
+        statusCode(resp.status);
+        return resp.json()
+      })
+      .then(function (data) {
+        console.log(data);
+        addForecast(data);
+      }).catch(function (error) {
+        console.log(error.status);
+        statusCode(error.status);
+      });
+  }
+  function addForecast(data) {
+    var forecast = document.getElementById("nextday");
+    forecast.innerHTML =
+      ` Forecast for ${data.location.name} on ${data.forecast.forecastday[0].date}.
+      The Epoch Time is ${data.forecast.forecastday[0].date_epoch} <br>
+      <br>
+      Moonrise is at: ${data.forecast.forecastday[0].astro.moonrise} <br>
+      Moonset is at: ${data.forecast.forecastday[0].astro.moonset} <br>
+      Sunrise is at: ${data.forecast.forecastday[0].astro.sunrise} <br>
+      Sunset is at: ${data.forecast.forecastday[0].astro.sunset} <br>
+      <br>
+
+      The Average Humidity is: ${data.forecast.forecastday[0].day.avghumidity} <br>
+      The Average Temperature in Celcius is: ${data.forecast.forecastday[0].day.avgtemp_c} <br>
+      The Average Temperature in Fahrenheit is: ${data.forecast.forecastday[0].day.avgtemp_f} <br>
+      The Average Visibility in KM is: ${data.forecast.forecastday[0].day.avgvis_km} <br>
+      The Average Visibility in miles is: ${data.forecast.forecastday[0].day.avgvis_miles} <br>
+      The Condition is: ${data.forecast.forecastday[0].day.condition.text} <br>
+      The Maximum Temperature in Celcius is: ${data.forecast.forecastday[0].day.maxtemp_c} <br>
+      The Maximum Temperature in Fahrenheit is: ${data.forecast.forecastday[0].day.maxtemp_f} <br>
+      The Maximum Wind Speed in KPH is: ${data.forecast.forecastday[0].day.maxwind_kph} <br>
+      The Maximum Wind Speed in MPH is: ${data.forecast.forecastday[0].day.maxwind_mph} <br>
+      The Minimum Temperature in Celsius is: ${data.forecast.forecastday[0].day.mintemp_c} <br>
+      The Minimum Temperature in Fahrenheit is: ${data.forecast.forecastday[0].day.mintemp_f} <br>
+      The Total Precipitation in inches is: ${data.forecast.forecastday[0].day.totalprecip_in} <br>
+      The Total Precipitation in mm is: ${data.forecast.forecastday[0].day.totalprecip_mm} <br>
+      The UV index is: ${data.forecast.forecastday[0].day.uv} <br>
+      `;
+  }
+
+</script>
+
+<script>
+</script>
+
+</html>
